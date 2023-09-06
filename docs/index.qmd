@@ -646,7 +646,7 @@ newdata |> mutate(Pihat = pihat) |>
 dot -Tpng resources/images/p5.dot -o resources/images/p5.png
 ```
 
-![](resources/images/p4.png){width="100%"}
+![](resources/images/p5.png){width="100%"}
 
 ## Mensures
 
