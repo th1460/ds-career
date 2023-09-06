@@ -1144,7 +1144,7 @@ p <- p + ggplot2::geom_sf(data = sf::st_as_sf(visits, "nodes"),
     ggplot2::geom_sf(data = sf::st_as_sf(depot, "nodes"), 
                      ggplot2::aes(col = "Depot"), size = 6) +
     ggplot2::labs(x = "", y = "", colour = "") +
-    ggplot2::theme(text = element_text(size = 18))
+    ggplot2::theme(text = element_text(size = 16))
 
 plotly::ggplotly(p, tooltip = "") |> 
     plotly::layout(modebar = list(orientation = "v"))
