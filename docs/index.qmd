@@ -1183,11 +1183,12 @@ Fonte: <https://simplehossain.medium.com/the-10-algorithms-data-scientist-must-h
 ::: {.column}
 ::: {.medium right="30%"}
 
-<h2>Contato</h2>
 [th1460.github.io](https://th1460.github.io/)<br>
 [github.com/th1460](https://github.com/)<br>
 [medium.com/@thopr](https://medium.com/@thopr)<br>
-[linkedin.com/in/thop](https://www.linkedin.com/in/thop)
+[linkedin.com/in/thop](https://www.linkedin.com/in/thop)<br>
+[twitter.com/th14600](https://twitter.com/th14600)<br>
+[@thop@fosstodon.org](https://fosstodon.org/@thop)
 
 :::
 :::
