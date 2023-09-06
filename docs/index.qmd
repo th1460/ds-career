@@ -1,0 +1,1194 @@
+---
+title: "Ciência de Dados"
+subtitle: "Carreira"
+author: "Thiago Pires"
+format: 
+  revealjs:
+    theme: resources/scss/theme.scss
+    footer: "[github.com/th1460/ds-career](https://github.com/th1460/ds-career/)"
+    title-slide-attributes:
+      data-background-image: resources/images/cover.gif
+      data-background-size: cover
+    width: 1600
+    height: 900
+---
+
+## Thiago Pires
+
+### Cientista de Dados (CIO/IBM)
+
+:::: columns
+::: {.column}
+![](resources/images/avatar.jpeg){.rounded-corners .absolute left=5%}
+:::
+::: {.column}
+<h4>Formação:</h4>
+<ul>
+<li>Estatística (UERJ)</li>
+<li>MSc. Epidemiologia (ENSP/FIOCRUZ)</li>
+<li>DSc. Engenharia Biomédica (COPPE/UFRJ)</li>
+</ul><br>
+
+<h4>Experiência profissional:</h4>
+<ul>
+<li>Pesquisador (FIOCRUZ)</li>
+<li>Professor (UFF)</li>
+<li>Estatístico (FGV)</li>
+</ul>
+:::
+::::
+
+# Analytics
+
+> *Fact-based decisions have become our competitive strength. Using or not using analytics is no longer an option*
+
+## Analytics
+
+> *Analytics is a comprehensive and multidimensional field that uses mathematical techniques, statistics, predictive modeling and machine learning to find meaningful patterns and knowledge in data.*
+
+:::: columns
+::: {.column}
+**Florence Nightingale** recording and analyzing mortality data in the 1850s. She presented data on wounded soldiers with death counts per month. He ended up realizing that the main **death rate was due to hospital infection and not battle injuries**, as many imagined.
+:::
+::: {.column}
+![](resources/images/nightingale.jpeg){.absolute width="25%" left=60%}
+:::
+::::
+
+## Analytics
+
+:::: columns
+::: {.column width="60%"}
+A concrete example of spatial analysis carried out in 1854 in the city of London, where the population was **suffering a serious cholera epidemic**, disease about which at the time the form of contamination was not known. In a situation where more than 500 deaths had already occurred, the **Dr. John Snow had an idea: put on the city map the location of the cholera patients and the water wells** (at that time, the main source of water for the city's inhabitants). The obtained map is shown in the figure below.
+
+*Dr. Snow realized that most cases were concentrated around the "Broad Street" well*
+:::
+::: {.column width="40%"}
+![](resources/images/snowmap.jpeg){.absolute width="30%" left=65%}
+:::
+::::
+
+## Analytics
+
+Data analysis can reveal correlations and patterns. There is less need to rely on assumptions or intuition. And it can help answer questions like:
+
+- What happened?
+- How or why it happened?
+- What is happening now?
+- What will likely happen next?
+
+# CRISP-DM
+
+> *Cross Industry Standard Process for Data Mining*
+
+## CRISP-DM
+
+:::: columns
+::: {.column width="55%"}
+> *Cross-industry standard process for data mining, known as CRISP-DM is an open standard process model that describes common approaches used by data mining experts. It is the most widely-used analytics model*
+:::
+::: {.column width="45%"}
+```{r}
+#| echo: false
+
+DiagrammeR::grViz("resources/images/crisp-dm.dot", width = 600, height = 600)
+```
+:::
+::::
+
+## Business Understanding
+
+```{bash}
+dot -Tpng resources/images/p1.dot -o resources/images/p1.png
+```
+
+![](resources/images/p1.png){width="90%"}
+
+### Business question:
+> *What factors was associated with a person survive in the Titanic disaster?*
+
+## Titanic disaster
+
+:::: columns
+::: {.column} 
+```{r map}
+#| echo: true
+#| eval: false
+
+require(leaflet)
+require(dplyr)
+
+events <- bind_rows(
+  tibble(location = "Southampton (10-04-1912)", 
+         lng = -1.4191, lat = 50.7894),
+  tibble(location = "Cherbourg (10-04-1912)", 
+         lng = -1.6109, lat = 49.6445),
+  tibble(location = "Queenstown (11-04-1912)", 
+         lng = -8.3211, lat = 51.8535),
+  tibble(location = "Naufrágio (14-04-1912)", 
+         lng = -49.9408, lat = 41.7258),
+  tibble(location = "New York", 
+         lng = -73.9655, lat = 40.6832))
+
+leaflet() |>  addTiles() |>
+  addCircleMarkers(data = events |> slice(1:3, 5), 
+                   label = ~location,
+                   color = c(rep("blue", 3), "green")) |>
+  addMarkers(data = events |> slice(4), 
+             icon = list(
+               iconUrl = "resources/images/sinking-ship.jpeg", 
+               iconSize = c(50, 50)), 
+             label = ~location) |>
+  addPolylines(data = events, ~lng, ~lat)
+```
+:::
+::: {.column}
+```{r map, fig.height=5, fig.width=8}
+#| echo: false
+#| eval: true
+```
+:::
+::::
+
+## Data Understanding
+
+```{bash}
+dot -Tpng resources/images/p2.dot -o resources/images/p2.png
+```
+
+![](resources/images/p2.png){width="90%"}
+
+### Titanic case
+
+```{r}
+#| echo: true
+
+# Read data from Github
+dataset <- "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+```
+
+## Data Understanding (Titanic case)
+
+:::: columns
+::: {.column width="20%"}
+
+<br>
+<h3>Study the data dictionary</h3>
+<br>
+<h3>and</h3>
+<br>
+<h3>Inspect the dataset</h3>
+
+:::
+::: {.column width="80%"}
+
+```{r}
+#| echo: true
+
+titanic <- readr::read_csv(dataset)
+titanic |> glimpse()
+```
+:::
+::::
+
+## Data Understanding (Titanic case)
+
+:::: columns
+::: {.column}
+### Detect key associations
+
+```{r associations0}
+#| echo: true
+#| eval: false
+
+require(ggplot2)
+
+theme_set(
+  theme_minimal() + 
+    theme(text = element_text(size = 18))
+)
+
+titanic |>
+  ggplot(aes(Sex, ..count.., 
+             group = Survived, 
+             fill = as.factor(Survived))) + 
+  geom_bar()
+
+```
+:::
+::: {.column}
+```{r associations0, fig.height=7}
+#| echo: false
+#| eval: true
+```
+:::
+::::
+
+## Data Understanding (Titanic case)
+
+:::: columns
+::: {.column}
+### Detect key associations
+
+```{r associations1}
+#| echo: true
+#| eval: false
+#| code-line-numbers: "2|5"
+
+titanic |>
+  ggplot(aes(Sex, ..count../sum(..count..),
+             group = Survived, 
+             fill = as.factor(Survived))) + 
+  geom_bar(position = "fill")
+
+```
+:::
+
+::: {.column}
+```{r associations1, fig.height=7}
+#| echo: false
+#| eval: true
+```
+:::
+::::
+
+## Data Understanding (Titanic case)
+
+:::: columns
+::: {.column}
+### Detect key associations
+
+```{r associations2}
+#| echo: true
+#| eval: false
+
+titanic |>
+  ggplot(aes(Sex, ..count../sum(..count..), 
+             group = Survived, 
+             fill = as.factor(Survived))) + 
+  geom_bar(position = "fill") +
+  facet_grid(~Pclass)
+```
+:::
+::: {.column}
+```{r associations2, fig.height=7, fig.width=10}
+#| echo: false
+#| eval: true
+```
+:::
+::::
+
+## Data Understanding (Titanic case)
+
+:::: columns
+::: {.column}
+
+### Detect key associations
+
+```{r associations3}
+#| echo: true
+#| eval: false
+
+titanic |>
+  ggplot(aes(as.factor(Survived), Age)) + 
+  geom_boxplot()
+
+```
+:::
+::: {.column}
+```{r associations3, fig.height=7, fig.width=10}
+#| echo: false
+#| eval: true
+```
+:::
+::::
+
+## Data Understanding (Titanic case)
+
+:::: columns
+::: {.column}
+### Identify missing data
+
+```{r missing}
+#| echo: true
+#| eval: false
+
+na_count <- function(x) sum(is.na(x))
+
+titanic |>
+  summarise(across(everything(), 
+                   list(na_count), 
+                   .names = "{.col}")) |>
+  tidyr::pivot_longer(everything(), 
+                      values_to = "n_missing")
+```
+:::
+::: {.column}
+```{r missing}
+#| echo: false
+#| eval: true
+```
+:::
+::::
+
+## Data Understanding (Titanic case)
+
+### Analyse distribution
+
+:::: columns
+::: {.column}
+```{r fig.height=4}
+require(ggplot2)
+
+titanic |>
+  ggplot(aes(x = Fare)) +
+  geom_histogram() +
+  theme_minimal()
+
+```
+:::
+::: {.column}
+```{r}
+titanic |>
+  summarise(
+    min(Fare),
+    max(Fare),
+    mean(Fare),
+    median(Fare),
+    e1071::skewness(Fare)
+  ) |>
+  tidyr::pivot_longer(everything(),
+                      names_to = "measure") |> 
+  mutate(value = value |> round(2))
+```
+:::
+::::
+
+## Data Understanding (Titanic case)
+
+### Symetric distribution
+
+:::: columns
+::: {.column}
+```{r fig.height=4}
+set.seed(123)
+
+dataset <- tibble(x = rnorm(100, 30, 2))
+dataset %>% 
+  ggplot(aes(x)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(aes(x), color = "blue") +
+  theme_minimal()
+
+```
+:::
+::: {.column}
+```{r}
+dataset |> 
+  summarise(
+    min(x),
+    max(x),
+    mean(x),
+    median(x),
+    e1071::skewness(x)
+  ) |> 
+  tidyr::pivot_longer(everything(),
+                      names_to = "measure") |> 
+  mutate(value = value |> round(2))
+
+```
+:::
+::::
+
+## Data Preparation
+
+```{bash}
+dot -Tpng resources/images/p3.dot -o resources/images/p3.png
+dot -Tpng resources/images/p32_14.dot -o resources/images/p32_14.png
+```
+
+![](resources/images/p3.png){width="50%"}
+
+![](resources/images/p32_14.png){width="90%"}
+
+## Data Preparation (Titanic case)
+
+:::: columns
+::: {.column width="20%"}
+
+<h3>Do we drop rows? Which?</h3>
+<br>
+<h3>How treat empty values?</h3>
+
+:::
+::: {.column width="30%"}
+
+```{r missing}
+#| eval: true
+#| echo: false
+```
+:::
+::: {.column width="50%"}
+```{r}
+#| echo: true
+
+titanic$Name[4]
+```
+
+```{r fig.height=6}
+#| echo: true
+
+require(forcats)
+require(ggplot2)
+
+titanic |> 
+  mutate(
+    Title = Name |> 
+      stringr::str_extract(
+        "(?<=\\,\\s)(.*)(?=\\.)") |> 
+      fct_lump(n = 4)) |> 
+  ggplot(aes(Title, Age)) + geom_boxplot()
+```
+:::
+::::
+
+## Data Preparation (Titanic case)
+
+### After fix empty ages
+
+:::: columns
+::: {.column}
+```{r associations4}
+#| echo: true
+#| eval: false 
+
+titanic |> 
+  mutate(
+    Title = Name |>
+      stringr::str_extract("(?<=\\,\\s)(.*)(?=\\.)") |> 
+      fct_lump(n = 4)) |>
+  group_by(Title) |>
+  mutate(Age2 = ifelse(is.na(Age), median(Age, na.rm = TRUE), Age)) |> 
+  ggplot(aes(as.factor(Survived), Age2)) +
+  geom_boxplot()
+
+```
+:::
+::: {.column}
+```{r associations4, fig.height=5, fig.width=9}
+#| echo: false
+#| eval: true 
+```
+:::
+::::
+
+## Data Preparation (Titanic case)
+
+### Fix types and labels
+
+
+:::: columns
+::: {.column}
+```{r}
+#| echo: true
+
+titanic <- titanic |>
+  mutate(Sex = as.factor(Sex),
+         Pclass = factor(Pclass,
+                         labels = c("1st", "2nd", "3rd")),
+         Survived = factor(Survived, 
+                           labels = c("No", "Yes")),
+         Embarked = fct_recode(Embarked, 
+                               "Cherbourg" = "C", 
+                               "Queenstown" = "Q",
+                               "Southampton" = "S"))
+titanic %>% select(Sex, Survived, Embarked)
+```
+:::
+::: {.column}
+```{r}
+#| echo: true
+
+freq <- function(data, x) {
+  table <- data |> 
+    count({{x}}) |>
+    mutate(`%` = (n/sum(n) * 100) |> round(1)) |> 
+    rename(Levels = 1, N = 2)
+  tibble(Variable = quo_name(quo({{x}}))) |>
+    bind_cols(table)
+}
+
+c("Sex", "Survived", "Embarked", "Pclass") |>
+  purrr::map_dfr(~ freq(titanic, !! sym(.x)))
+```
+:::
+::::
+
+## Modeling
+
+```{bash}
+dot -Tpng resources/images/p4.dot -o resources/images/p4.png
+```
+
+![](resources/images/p4.png){width="100%"}
+
+### Titanic case
+
+> *What factors was associated with a person survive in the Titanic disaster?*
+
+#### Model selection
+- Logistic regression, Decision Tree, etc
+- Features: Sex, Pclass, interaction between Sex and Pclass?
+- Split strategy
+
+## Modeling (Titanic case)
+
+### Split data
+
+```{r}
+#| echo: true
+
+require(tidymodels)
+set.seed(555)
+
+# Put 3/4 of the data into the training set 
+data_split <- initial_split(titanic, prop = 3/4)
+
+# Create data frames for the two sets:
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+```
+
+## Modeling (Titanic case)
+
+:::: columns
+::: {.column}
+### `Survived ~ Sex + Pclass`
+
+```{r}
+#| echo: true
+
+lr_mod <- 
+  logistic_reg() |> 
+  set_engine("glm")
+
+lr_fit1 <- 
+  lr_mod |> 
+  fit(Survived ~ Sex + Pclass, data = train_data)
+
+lr_fit1 %>% tidy()
+```
+:::
+::: {.column}
+```{r fig.height=3}
+#| echo: true
+
+require(magrittr)
+newdata <- 
+  expand.grid(Pclass = c("1st", "2nd", "3rd"),
+              Sex = c("male", "female"))
+pihat <- 
+  (lr_fit1 |> predict(newdata, type = "prob")) %$% 
+  .pred_Yes
+newdata |> mutate(Pihat = pihat) |> 
+  ggplot(aes(Sex, Pihat, 
+             group = Pclass, colour = Pclass)) + 
+  geom_line() + geom_point() +
+  labs(x = "Sex", y = expression(pi(Survived == yes)), 
+       colour = "Ticket Class") +
+  theme_minimal() +
+  theme(text = element_text(size = 18))
+```
+:::
+::::
+
+## Modeling (Titanic case)
+
+:::: columns
+::: {.column}
+### `Survived ~ Sex + Pclass + Sex:Pclass`
+
+```{r}
+#| echo: true
+
+lr_fit2 <- 
+  lr_mod |> 
+  fit(Survived ~ Sex * Pclass, data = train_data)
+
+lr_fit2 |> tidy()
+```
+:::
+::: {.column}
+```{r fig.height=3}
+#| echo: true
+
+newdata <- 
+  expand.grid(Pclass = c("1st", "2nd", "3rd"),
+              Sex = c("male", "female"))
+pihat <- 
+  (lr_fit2 |> predict(newdata, type = "prob")) %$% 
+  .pred_Yes
+newdata |> mutate(Pihat = pihat) |> 
+  ggplot(aes(Sex, Pihat, 
+             group = Pclass, colour = Pclass)) + 
+  geom_line() + geom_point() +
+  labs(x = "Sex", y = expression(pi(Survived == yes)), 
+       colour = "Ticket Class") +
+  theme_minimal() +
+  theme(text = element_text(size = 18))
+```
+:::
+::::
+
+## Evaluation
+
+```{bash}
+dot -Tpng resources/images/p5.dot -o resources/images/p5.png
+```
+
+![](resources/images/p4.png){width="100%"}
+
+## Mensures
+
+:::: columns
+::: {.column}
+| Predicted\Actual |        Survived        |       No Survived      |
+|:----------------:|:----------------------:|:----------------------:|
+|     Survived     |  True Positive<br>(TP) | False Positive<br>(FP) |
+|    No Survived   | False Negative<br>(FN) |  True Negative<br>(TN) |
+:::
+::: {.column}
+$$\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}$$
+
+$$\text{Precision} = \frac{TP}{TP + FP}$$
+
+$$\text{Recall} = \frac{TP}{TP + FN}$$
+$$F_{1-score} = \frac{2\times\text{precision}\times\text{recall}}{\text{precision} + \text{recall}}$$
+:::
+::::
+
+## Evaluation (Titanic case)
+
+```{r}
+#| echo: true
+measure <- function(data) {
+  data %>% accuracy(truth = Survived, .pred_class) |>
+    bind_rows(data |> f_meas(truth = Survived, .pred_class))
+}
+```
+
+
+:::: columns
+::: {.column}
+### `Survived ~ Sex + Pclass`
+
+```{r}
+#| echo: true
+predict(lr_fit1, test_data) |> 
+  bind_cols(predict(lr_fit1, 
+                    test_data, type = "prob")) |>
+  bind_cols(test_data |> select(Survived)) |>
+  measure()
+```
+:::
+::: {.column}
+### `Survived ~ Sex + Pclass + Sex:Pclass`
+
+```{r}
+#| echo: true
+predict(lr_fit2, test_data) |>
+  bind_cols(predict(lr_fit2, 
+                    test_data, type = "prob")) |> 
+  bind_cols(test_data |> select(Survived)) |>
+  measure()
+```
+:::
+::::
+
+## Deployment
+
+```{bash}
+dot -Tpng resources/images/p6.dot -o resources/images/p6.png
+```
+
+![](resources/images/p6.png){width="100%"}
+
+## Deployment (Titanic case)
+
+### Save model
+
+```{r}
+#| echo: true
+#| eval: false
+yaml::write_yaml(
+  tidypredict::parse_model(lr_fit1), 
+  "../R/my_model.yml"
+)
+```
+
+## Deployment (Titanic case)
+
+### IBM Cloud Functions
+
+> IBM Cloud™ Functions service is an event-driven compute platform, also referred to as Serverless computing, or as Function as a Service (FaaS), that runs code in response to events or direct invocations.
+
+#### Configure
+
+#### `exec`
+
+```
+#!/bin/bash
+
+# run R script
+chmod +x script.R # turn executable
+echo "$@" > input.json # set input
+./script.R # run script
+```
+
+#### `Dockerfile`
+
+```
+FROM openwhisk/dockerskeleton
+RUN apk update && apk add R R-dev R-doc build-base
+RUN R -e "install.packages(c('jsonlite', 'tidypredict', 'yaml'), repos = 'http://cran.rstudio.com/')"
+```
+
+## Deployment (Titanic case)
+
+### IBM Cloud Functions
+
+#### Configure
+
+#### `script.R`
+
+```
+#!/usr/bin/env Rscript
+
+# load model
+loaded_model <- 
+tidypredict::as_parsed_model(
+yaml::read_yaml("my_model.yml"))
+
+# input
+input <- jsonlite::fromJSON("input.json", flatten = FALSE)
+
+# compute prediction
+pred <- tidypredict::tidypredict_to_column(as.data.frame(input), loaded_model)
+
+# output
+jsonlite::stream_out(pred, verbose = FALSE)
+```
+
+## Deployment (Titanic case)
+
+### IBM Cloud Functions
+
+#### Deploy
+
+```
+# docker
+docker build th1460/titanic .
+docker push th1460/titanic
+
+# login
+ibmcloud login -sso
+ibmcloud target --cf
+
+# zip
+zip -r titanic.zip exec script.R my_model.yml
+
+# deploy
+ibmcloud fn action create titanic titanic.zip --docker th1460/titanic --web true
+```
+
+## Deployment (Titanic case)
+
+### IBM Cloud Functions
+
+#### Request
+
+```{r}
+#| echo: true
+#| eval: false
+
+input <- list(Sex = "male", Pclass = "3rd")
+
+"https://us-south.functions.appdomain.cloud/api/v1/web/thiago.pires%40ibm.com_dev/default/titanic.json" |> 
+  httr::POST(., body = input, encode = "json") |> 
+  httr::content() |> 
+  .[c("Sex", "Pclass", "fit")] |> 
+  jsonlite::toJSON(pretty = TRUE, auto_unbox = TRUE)
+```
+
+```
+{
+  "Sex": "male",
+  "Pclass": "3rd",
+  "fit": 0.0979
+}
+```
+
+# Caso real
+
+## Problema de otimização de rota de frota
+
+### Mapa do centro de Campinas SP
+
+```{r}
+#| echo: true
+#| output-location: column
+
+bbox <- list(
+    p1 = list(long = -47.0708, lat = -22.9075),
+    p2 = list(long = -47.0348, lat = -22.8804)
+)
+
+leaflet::leaflet() |> 
+    leaflet::addTiles()|> 
+    leaflet::addRectangles(
+        lng1 = bbox$p1$long, lat1 = bbox$p1$lat,
+        lng2 = bbox$p2$long, lat2 = bbox$p2$lat,
+        fillColor = "transparent"
+    ) |> 
+    leaflet::fitBounds(
+        lng1 = bbox$p1$long, lat1 = bbox$p1$lat,
+        lng2 = bbox$p2$long, lat2 = bbox$p2$lat,
+    )
+```
+
+## Vias como linhas baseado no `osmdata`
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-height: 6
+#| fig-width: 6
+
+if (!exists("has_internet_via_proxy")) {
+    assign("has_internet_via_proxy", TRUE, environment(curl::has_internet))   
+}
+
+# Consulta
+query <- osmdata::opq(bbox =  unlist(bbox)) |> 
+    osmdata::add_osm_feature(key = "highway") |> 
+    osmdata::osmdata_sf()
+
+# Retornando linhas
+query_lines <- query$osm_lines
+
+# Visualizando o objeto
+query_lines |> 
+    sf::st_geometry() |> 
+    ggplot2::ggplot() +
+    ggplot2::geom_sf(colour = "gray") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(text = ggplot2::element_text(size = 18))
+
+```
+
+## Convertendo as vias em um objeto `sfnetwork`
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-height: 6
+#| fig-width: 6
+
+poly_to_lines <- sf::st_cast(query$osm_polygons, "LINESTRING")
+
+query_lines <- dplyr::bind_rows(query_lines, poly_to_lines)
+
+highway_net <- sfnetworks::as_sfnetwork(query_lines, directed = FALSE)
+
+# Remove nodes that have only two edges connected
+# highway_simple <- tidygraph::convert(highway_net, sfnetworks::to_spatial_smooth)
+
+# Filter connected components
+connected_net <- highway_net |> 
+    tidygraph::activate("nodes") |> 
+    dplyr::filter(tidygraph::group_components() == 1)
+
+# Plot
+ggplot2::ggplot() +
+    ggplot2::geom_sf(data = sf::st_as_sf(connected_net, "edges"), col = "gray") +
+    ggplot2::geom_sf(data = sf::st_as_sf(connected_net, "nodes"), col = "gray") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(text = ggplot2::element_text(size = 18))
+
+```
+
+## Problema de otimização de rota de frota
+
+São 3 veículos e preciso selecionar a melhor rota. Eles devem sair e retornar a um depósito.
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-height: 7
+#| fig-width: 7
+
+set.seed(711)
+index_visits <- sample(1:603, 9)
+visits <- connected_net |> 
+    tidygraph::activate("nodes") |> 
+    dplyr::slice(index_visits)
+
+depot <- connected_net |> 
+    tidygraph::activate("nodes") |> 
+    dplyr::slice(23)
+
+ggplot2::ggplot() + 
+    ggplot2::geom_sf(data = sf::st_as_sf(connected_net, "edges"), col = "gray") +
+    ggplot2::geom_sf(data = sf::st_as_sf(connected_net, "nodes"), col = "gray") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(text = element_text(size = 15)) +
+    ggplot2::geom_sf(data = sf::st_as_sf(visits, "nodes"), 
+                     ggplot2::aes(col = "Visits"), size = 6) +
+    ggplot2::geom_sf(data = sf::st_as_sf(depot, "nodes"), 
+                     ggplot2::aes(col = "Depot"), size = 6) +
+    ggplot2::labs(x = "", y = "", colour = "") +
+    ggplot2::scale_color_manual(values = c("Visits" = "blue", 
+                                           "Depot" = "orange"))
+
+```
+
+## Problema de otimização de rota de frota
+
+Cálculo da matriz de custo
+
+```{r}
+#| echo: true
+#| output-location: column
+
+connected_net <- 
+    connected_net |> 
+    tidygraph::activate("edges") |> 
+    dplyr::mutate(weight = sfnetworks::edge_length())
+
+cost_matrix_route_problem <- 
+    sfnetworks::st_network_cost(connected_net, 
+                                from = c(23, index_visits), 
+                                to = c(23, index_visits), 
+                                weights = "weight")
+
+mode(cost_matrix_route_problem) <- "integer"
+
+cost_matrix_route_problem
+```
+
+## Problema de otimização de rota de frota utilizando `ortools` e `reticulate::`
+
+:::: columns
+::: {.column}
+```{r eval=FALSE}
+#| echo: true
+
+reticulate::use_virtualenv("../venv", required = TRUE)
+constraint_solver <- reticulate::import("ortools.constraint_solver")
+
+# Create data
+create_data_model <- function() {
+    
+    data <- reticulate::dict()
+    data['distance_matrix'] <- cost_matrix_route_problem
+    data['distance_matrix'] <-  data['distance_matrix']$tolist()
+    data['num_vehicles'] <- 3L
+    data['depot'] <- 0L
+    
+    return(data)
+    
+}
+
+# Create the routing model
+data <- create_data_model()
+manager <- constraint_solver$pywrapcp$RoutingIndexManager(
+    length(data['distance_matrix']),
+    data['num_vehicles'],
+    data['depot']
+)
+
+routing <- constraint_solver$pywrapcp$RoutingModel(manager)
+
+# Create the distance callback
+distance_callback <- function(from_index, to_index) {
+    
+    from_node <- manager$IndexToNode(from_index)
+    to_node <- manager$IndexToNode(to_index)
+    
+    return(data['distance_matrix'][from_node][to_node])
+    
+}
+
+transit_callback_index <- routing$RegisterTransitCallback(distance_callback)
+
+# Set the cost of travel
+routing$SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+
+# Add a distance dimension
+dimension_name <- 'Distance'
+routing$AddDimension(
+    transit_callback_index,
+    0L,  # no slack
+    15000L,  # vehicle maximum travel distance
+    TRUE,  # start cumul to zero
+    dimension_name)
+
+distance_dimension <- routing$GetDimensionOrDie(dimension_name)
+distance_dimension$SetGlobalSpanCostCoefficient(100L)
+
+# Set search parameters
+search_parameters <- constraint_solver$pywrapcp$DefaultRoutingSearchParameters()
+search_parameters$first_solution_strategy = (
+    constraint_solver$routing_enums_pb2$FirstSolutionStrategy$PATH_CHEAPEST_ARC)
+
+solution <- routing$SolveWithParameters(search_parameters)
+
+# Save routes to a list or array
+get_routes <- function(solution, routing, manager) {
+    
+    routes <- list()
+    
+    for (route_nbr in seq(0, routing$vehicles() - 1)) {
+        
+        index <- routing$Start(route_nbr)
+        route <- c(manager$IndexToNode(index))
+        
+        while(!routing$IsEnd(index)) {
+            
+            index <- solution$Value(routing$NextVar(index))
+            route <- append(route, manager$IndexToNode(index))
+            
+        }
+        
+        routes[[route_nbr + 1]] <- route
+        names(routes)[route_nbr + 1] <- route_nbr
+        
+    }
+    
+    return(routes)
+    
+}
+
+(routes <- get_routes(solution, routing, manager))
+```
+:::
+::: {.column}
+```
+$`0`
+[1] 0 6 9 0
+
+$`1`
+[1] 0 3 2 5 0
+
+$`2`
+[1] 0 7 1 8 4 0
+```
+:::
+::::
+
+## Problema de otimização de rota de frota
+
+```{r}
+#| echo: true
+#| output-location: column
+#| fig-height: 8
+#| fig-width: 8
+
+real_routes <- lapply(readRDS("../data/routes.RDS"), \(x) c(23, index_visits)[x + 1])
+
+vrp_paths <- function(x) {
+    
+    results <- list()
+    for (i in seq(length(x))) {
+        
+        from_idxs <- unique(x[[i]])
+        to_idxs <- c(from_idxs[2:length(from_idxs)], from_idxs[1])
+        
+        paths <- mapply(sfnetworks::st_network_paths,
+                        from = from_idxs,
+                        to = to_idxs,
+                        MoreArgs = list(x = connected_net, weights = "weight"))    
+        
+        results[[i]] <- paths
+    }
+    
+    return(results)
+    
+}
+
+# Plot results
+vrp_paths_fun <- function(x, index, vehicle) {
+    
+    vrp_edge_paths <- connected_net |> 
+        tidygraph::activate("edges") |> 
+        dplyr::slice(vrp_paths(x)[[vehicle]][, index]$edge_paths |> unlist())
+    
+    ggplot2::geom_sf(data = sf::st_as_sf(vrp_edge_paths, "edges"),
+                     ggplot2::aes(col = as.character(vehicle)), lwd = 1.3)
+    
+}
+
+p <- ggplot2::ggplot() +
+    ggplot2::geom_sf(data = sf::st_as_sf(connected_net, "edges"), col = "gray") +
+    ggplot2::geom_sf(data = sf::st_as_sf(connected_net, "nodes"), col = "gray") +
+    ggplot2::theme_minimal()
+
+for (j in seq(length(real_routes))) {
+    for (i in seq(length(real_routes[[j]]) - 1)) {
+        p <- p + vrp_paths_fun(real_routes, i, j)   
+    }
+}
+
+p <- p + ggplot2::geom_sf(data = sf::st_as_sf(visits, "nodes"), 
+                     ggplot2::aes(col = "Visits"), size = 6) +
+    ggplot2::geom_sf(data = sf::st_as_sf(depot, "nodes"), 
+                     ggplot2::aes(col = "Depot"), size = 6) +
+    ggplot2::labs(x = "", y = "", colour = "") +
+    ggplot2::theme(text = element_text(size = 18))
+
+plotly::ggplotly(p, tooltip = "") |> 
+    plotly::layout(modebar = list(orientation = "v"))
+
+```
+
+## O que precisa para ser um Cientísta de Dados?
+
+:::: columns
+::: {.column}
+![](resources/images/modern-data-scientist.webp){width="60%"}
+
+Fonte: <https://simplehossain.medium.com/the-10-algorithms-data-scientist-must-have-to-know-97a2c478ce94>
+:::
+::: {.column}
+- <https://www.udemy.com/>
+- <https://www.coursera.org/>
+- <https://www.datacamp.com/>
+- <https://www.kaggle.com/>
+- Data Science Do Zero: Noções Fundamentais com Python <https://a.co/d/eWTrHrs>
+- Storytelling com dados <https://a.co/d/7Bv2Q9m>
+- O andar do bêbado: Como o acaso determina nossas vidas <https://a.co/d/5LMBD21>
+:::
+::::
+
+##
+
+:::: columns
+::: {.column}
+::: {.medium right="70%"} 
+
+<h1>Obrigado</h1>
+
+:::
+:::
+::: {.column}
+::: {.medium right="30%"}
+
+<h2>Contato</h2>
+[th1460.github.io](https://th1460.github.io/)<br>
+[github.com/th1460](https://github.com/)<br>
+[medium.com/@thopr](https://medium.com/@thopr)<br>
+[linkedin.com/in/thop](https://www.linkedin.com/in/thop)
+
+:::
+:::
+::::
